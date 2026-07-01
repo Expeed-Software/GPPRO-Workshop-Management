@@ -498,7 +498,11 @@ app.get('/api/v1/dashboard/kpis', authenticate, async (req: any, res: any) => {
       'SELECT ' +
       '  (SELECT COUNT(*) FROM Customer WHERE ISNULL(Active,1)=1) AS CustomerCount,' +
       '  (SELECT COUNT(*) FROM SalesOrdr01) AS OrderCount,' +
-      '  (SELECT COUNT(*) FROM SalesOrdr01 WHERE CLOSED=0) AS OpenJobCount,' +
+      '  (SELECT COUNT(*) FROM SalesOrdr01 J' +
+      '   INNER JOIN salesOrdrStatusHead H ON J.statusId = H.StatusID' +
+      '   WHERE H.FinishedStatusYN = 0 AND H.PartsNotAvailYN = 0' +
+      '     AND J.Ordr NOT IN (SELECT Ordr FROM Sales01)' +
+      '     AND ISNULL(J.Closed, 0) = 0 AND ISNULL(J.Delivered, 0) = 0) AS OpenJobCount,' +
       '  (SELECT ISNULL(SUM(s.qty * ISNULL(i.Prate,0)),0) FROM Items i' +
       '   LEFT JOIN (SELECT Itemcode, SUM(StkIN)-SUM(StkOut) AS qty FROM StockTransaction GROUP BY Itemcode) s ON s.Itemcode=i.ItemCode) AS StockValue'
     );
