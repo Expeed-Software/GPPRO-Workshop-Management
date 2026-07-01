@@ -221,17 +221,16 @@ export async function getRunningJobs(filter: Record<string, any>) {
 
   const result = await req.query(
     'SELECT * FROM (' +
-    '  SELECT ROW_NUMBER() OVER (ORDER BY j.CreatedDt DESC) AS rn,' +
-    '         j.ID, j.Ordr, j.Date, j.SectionID, j.EmpID, j.StatusID,' +
-    '         j.Remarks, j.UserID, j.CreatedDt,' +
-    '         o.CustId, o.VehId, o.Total, o.Nett,' +
-    '         c.custname AS CustomerName,' +
-    '         s.Description AS StatusDescription' +
-    '  FROM jobInProgress j' +
-    '  LEFT JOIN SalesOrdr01 o ON o.Ordr = j.Ordr' +
-    '  LEFT JOIN Customer c ON c.CustId = o.CustId' +
-    '  LEFT JOIN salesOrdrStatusHead s ON s.StatusID = j.StatusID' +
-    '  WHERE j.LastRecord = 1' +
+    '  SELECT ROW_NUMBER() OVER (ORDER BY v.CreatedDt DESC) AS rn,' +
+    '         v.ID, v.Ordr, v.Date, v.SectionID, v.EmpID, v.StatusID,' +
+    '         v.Remarks, v.UserID, v.CreatedDt,' +
+    '         v.VehId, v.VehNo, v.EngineNo, v.Make, v.Colour, v.ManYear,' +
+    '         v.custname AS CustomerName,' +
+    '         v.ContactTel, v.StaffName,' +
+    '         v.StatusDescription, v.Status,' +
+    '         v.Ordt, v.ServiceCharge, v.Estimation, v.CLOSED, v.FinishedStatusYN' +
+    '  FROM JobInProgressSql v' +
+    '  WHERE v.LastRecord = 1' +
     ') t WHERE rn > @offset AND rn <= (@offset + @limit)'
   );
   return { recordset: result.recordset, page, limit };
