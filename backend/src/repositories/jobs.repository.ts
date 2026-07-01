@@ -14,9 +14,8 @@ export async function getEstimationDetails(jobCardNo: string) {
     'SELECT e.ID, e.Yr, e.ccode, e.EstimationNo, e.BillDt, e.CustomerId,' +
     '       e.VehicleId, e.StaffId, e.Addition, e.Less, e.Remarks, e.Total,' +
     '       e.totlabour, e.nett, e.JObCardNo, e.User, e.jobCard,' +
-    '       c.custname AS CustomerName' +
-    ' FROM Estimation01 e' +
-    ' LEFT JOIN Customer c ON c.CustId = e.CustomerId' +
+    '       e.custname AS CustomerName' +
+    ' FROM Estimation01Sql e' +
     ' WHERE e.JObCardNo = @jobCard OR e.jobCard = @jobCard'
   );
 
@@ -26,8 +25,8 @@ export async function getEstimationDetails(jobCardNo: string) {
   const req2 = pool.request();
   req2.input('estId', sql.Int, header.ID);
   const linesResult = await req2.query(
-    'SELECT ID, Description, Qty, UnitPrice, LabourAmt' +
-    ' FROM Estimation02 WHERE ID = @estId ORDER BY Srl'
+    'SELECT ID, Description, Qty, UnitPrice, labouramt AS LabourAmt' +
+    ' FROM Estimation02Sql WHERE ID = @estId ORDER BY Sl'
   );
 
   header.items = linesResult.recordset || [];
@@ -45,7 +44,7 @@ export async function listEstimations(filter: Record<string, any>) {
   let where = '1=1';
   if (filter.EstimationNo) { req.input('EstimationNo', sql.NVarChar, `%${filter.EstimationNo}%`); where += ' AND e.EstimationNo LIKE @EstimationNo'; }
   if (filter.JObCardNo)    { req.input('JObCardNo',    sql.NVarChar, `%${filter.JObCardNo}%`);    where += ' AND e.JObCardNo LIKE @JObCardNo'; }
-  if (filter.CustomerName) { req.input('CustomerName', sql.NVarChar, `%${filter.CustomerName}%`); where += ' AND c.custname LIKE @CustomerName'; }
+  if (filter.CustomerName) { req.input('CustomerName', sql.NVarChar, `%${filter.CustomerName}%`); where += ' AND e.custname LIKE @CustomerName'; }
   if (filter.StaffId)      { req.input('StaffId',      sql.NVarChar, filter.StaffId);             where += ' AND e.StaffId = @StaffId'; }
   if (filter.dateFrom)     { req.input('dateFrom',     sql.Date,     new Date(filter.dateFrom));   where += ' AND e.BillDt >= @dateFrom'; }
   if (filter.dateTo)       { req.input('dateTo',       sql.Date,     new Date(filter.dateTo));     where += ' AND e.BillDt <= @dateTo'; }
@@ -58,9 +57,8 @@ export async function listEstimations(filter: Record<string, any>) {
     '  SELECT ROW_NUMBER() OVER (ORDER BY e.BillDt DESC, e.ID DESC) AS rn,' +
     '         e.ID, e.EstimationNo, e.BillDt, e.JObCardNo, e.CustomerId,' +
     '         e.VehicleId, e.StaffId, e.Total, e.nett,' +
-    '         c.custname AS CustomerName' +
-    '  FROM Estimation01 e' +
-    '  LEFT JOIN Customer c ON c.CustId = e.CustomerId' +
+    '         e.custname AS CustomerName' +
+    '  FROM Estimation01Sql e' +
     '  WHERE ' + where +
     ') AS paged' +
     ' WHERE rn > @offset AND rn <= (@offset + @limit)' +
@@ -77,8 +75,7 @@ export async function listEstimations(filter: Record<string, any>) {
 
   const countResult = await countReq.query(
     'SELECT COUNT(*) AS total' +
-    ' FROM Estimation01 e' +
-    ' LEFT JOIN Customer c ON c.CustId = e.CustomerId' +
+    ' FROM Estimation01Sql e' +
     ' WHERE ' + where
   );
 
