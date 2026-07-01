@@ -188,36 +188,25 @@ export async function getJobStatusHistory(jobId: string) {
   return { recordset: result.recordset };
 }
 
+// Uses spGetWorkStatus (DB-Preserve): the base "open job" set is defined by the SP as
+// Ordr NOT IN Sales01 AND Closed=0 AND Delivered=0 — not just CLOSED=0. The SP takes no
+// parameters, so date/advisor/status narrowing and pagination are applied here, in-memory,
+// on top of the SP's authoritative result set.
 export async function getWorkStatus(filter: Record<string, any>) {
-  const pool = await getDbPool();
   const page = filter.page || 1;
   const limit = filter.limit || 50;
   const offset = (page - 1) * limit;
 
-  const req = pool.request();
-  req.input('limit', sql.Int, limit);
-  req.input('offset', sql.Int, offset);
+  const result = await callProcedure('spGetWorkStatus');
+  let rows = result.recordset as any[];
 
-  let where = 'o.CLOSED = 0';
-  if (filter.dateFrom) { req.input('dateFrom', sql.DateTime, new Date(filter.dateFrom)); where += ' AND o.Ordt >= @dateFrom'; }
-  if (filter.dateTo)   { req.input('dateTo',   sql.DateTime, new Date(filter.dateTo));   where += ' AND o.Ordt <= @dateTo'; }
-  if (filter.advisor)  { req.input('advisor',  sql.NVarChar, filter.advisor);             where += ' AND o.staffid = @advisor'; }
-  if (filter.status)   { req.input('status',   sql.NVarChar, filter.status);              where += ' AND s.Description LIKE \'%\' + @status + \'%\''; }
+  if (filter.dateFrom) { const d = new Date(filter.dateFrom); rows = rows.filter((r) => r.ordt && new Date(r.ordt) >= d); }
+  if (filter.dateTo)   { const d = new Date(filter.dateTo);   rows = rows.filter((r) => r.ordt && new Date(r.ordt) <= d); }
+  if (filter.advisor)  { const adv = String(filter.advisor).toLowerCase(); rows = rows.filter((r) => (r.StaffName || '').toLowerCase() === adv); }
+  if (filter.status)   { const st = String(filter.status).toLowerCase();  rows = rows.filter((r) => (r.Status || '').toLowerCase().includes(st)); }
 
-  const result = await req.query(
-    'SELECT * FROM (' +
-    '  SELECT ROW_NUMBER() OVER (ORDER BY o.Ordt DESC) AS rn,' +
-    '         o.ID, o.Ordr, o.Ordt, o.CustId, o.VehId, o.staffid,' +
-    '         o.Total, o.Nett, o.CLOSED, o.StatusId, o.TechNote,' +
-    '         c.custname AS CustomerName,' +
-    '         s.Description AS StatusDescription, s.ForeColour, s.BackColour' +
-    '  FROM SalesOrdr01 o' +
-    '  LEFT JOIN Customer c ON c.CustId = o.CustId' +
-    '  LEFT JOIN salesOrdrStatusHead s ON s.StatusID = o.StatusId' +
-    '  WHERE ' + where +
-    ') t WHERE rn > @offset AND rn <= (@offset + @limit)'
-  );
-  return { recordset: result.recordset, page, limit };
+  const total = rows.length;
+  return { recordset: rows.slice(offset, offset + limit), page, limit, total };
 }
 
 export async function getRunningJobs(filter: Record<string, any>) {

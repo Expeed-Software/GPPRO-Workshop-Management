@@ -31,11 +31,11 @@ export const Dashboard: React.FC = () => {
   const outstanding = outArr.length > 0 ? outArr.reduce((sum: number, r: any) => sum + Number(r.Outstanding || r.outstanding || 0), 0) : undefined;
 
   const kpiCards = [
-    { label: 'Customers', value: fmt(kpis?.CustomerCount), icon: <Building2 size={22} />, color: '#3831c4', link: '/crm/customers', sub: 'Total registered' },
-    { label: 'Open Jobs (WIP)', value: fmt(kpis?.OpenJobCount), icon: <ShoppingCart size={22} />, color: '#2eae6c', link: '/jobs/work-status', sub: 'Jobs in progress' },
-    { label: 'Sales Orders', value: fmt(kpis?.OrderCount), icon: <FileText size={22} />, color: '#f7be43', link: '/sales/orders', sub: 'All orders' },
-    { label: 'Stock Value', value: fmtCurrency(kpis?.StockValue), icon: <Package size={22} />, color: '#368aad', link: '/inventory/stock/display', sub: 'Inventory valuation' },
-    { label: 'Receivables', value: fmtCurrency(outstanding), icon: <DollarSign size={22} />, color: '#d23b41', link: '/reports/customer-outstanding', sub: 'Unpaid invoices' },
+    { label: 'Customers', value: fmt(kpis?.CustomerCount), icon: <Building2 size={22} />, color: '#3831c4', link: '/crm/customers' },
+    { label: 'Job in Progress', value: fmt(kpis?.OpenJobCount), icon: <ShoppingCart size={22} />, color: '#2eae6c', link: '/jobs/work-status'},
+    { label: 'Total Sales', value: fmt(kpis?.OrderCount), icon: <FileText size={22} />, color: '#f7be43', link: '/sales/orders'},
+    { label: 'Stock Value', value: fmtCurrency(kpis?.StockValue), icon: <Package size={22} />, color: '#368aad', link: '/inventory/stock/display', },
+    { label: 'Unpaid Invoices', value: fmtCurrency(outstanding), icon: <DollarSign size={22} />, color: '#d23b41', link: '/reports/customer-outstanding'},
     { label: 'Reports', value: '→', icon: <TrendingUp size={22} />, color: '#6c65ea', link: '/reports', sub: 'View all reports' },
   ];
 
@@ -71,7 +71,7 @@ export const Dashboard: React.FC = () => {
             <div className={styles.kpiInfo}>
               <div className={styles.kpiValue}>{kpi.value}</div>
               <div className={styles.kpiLabel}>{kpi.label}</div>
-              <div style={{ fontSize: '0.75rem', color: 'var(--color-text-tertiary)', marginTop: '2px' }}>{kpi.sub}</div>
+              {kpi.sub && <div style={{ fontSize: '0.75rem', color: 'var(--color-text-tertiary)', marginTop: '2px' }}>{kpi.sub}</div>}
             </div>
             <ArrowRight size={14} style={{ color: kpi.color, opacity: 0.5, marginLeft: 'auto' }} />
           </Link>

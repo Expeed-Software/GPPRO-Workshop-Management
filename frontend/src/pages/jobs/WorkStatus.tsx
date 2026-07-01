@@ -28,6 +28,18 @@ export default function WorkStatus() {
     return s.badgeGray;
   };
 
+  // spGetWorkStatus returns forecolour/backcolour as legacy Windows OLE_COLOR integers
+  // (0x00BBGGRR). Negative values are system-colour indices with no browser equivalent,
+  // so those fall back to the CSS badge class instead.
+  const oleColorToCss = (val: unknown): string | undefined => {
+    const n = Number(val);
+    if (!Number.isFinite(n) || n < 0) return undefined;
+    const r = n & 0xff;
+    const g = (n >> 8) & 0xff;
+    const b = (n >> 16) & 0xff;
+    return `rgb(${r}, ${g}, ${b})`;
+  };
+
   return (
     <div data-testid="workstatus-page" className={s.page}>
       <div className={s.header}>
@@ -47,7 +59,7 @@ export default function WorkStatus() {
           </div>
           <select data-testid="workstatus-filter-advisor" value={filters.advisor} onChange={(e) => setFilters((p) => ({ ...p, advisor: e.target.value }))}>
             <option value="">All Advisors</option>
-            {employees.map((e: any) => <option key={e.staffId ?? e.id} value={e.staffId ?? e.id}>{e.name}</option>)}
+            {employees.map((e: any) => <option key={e.staffId ?? e.id} value={e.name}>{e.name}</option>)}
           </select>
           <button className={`${s.btn} ${s.btnPrimary}`} onClick={() => refetch()}>Search</button>
         </div>
@@ -64,24 +76,31 @@ export default function WorkStatus() {
               </thead>
               <tbody>
                 {jobs.map((job: any, i: number) => (
-                  <tr key={job.id ?? i} data-testid={`workstatus-row-${job.id}`}>
-                    <td>{job.Ordr ?? job.ID}</td>
-                    <td>{job.CustomerName}</td>
-                    <td>{job.VehId}</td>
-                    <td>{job.staffid}</td>
-                    <td><span className={`${s.badge} ${getBadge(job.StatusDescription)}`}>{job.StatusDescription}</span></td>
+                  <tr key={job.Ordr ?? i} data-testid={`workstatus-row-${job.Ordr}`}>
+                    <td>{job.Ordr}</td>
+                    <td>{job.CustName}</td>
+                    <td>{job.VehNo}</td>
+                    <td>{job.StaffName}</td>
+                    <td>
+                      <span
+                        className={`${s.badge} ${getBadge(job.Status)}`}
+                        style={{ color: oleColorToCss(job.forecolour), background: oleColorToCss(job.backcolour) }}
+                      >
+                        {job.Status}
+                      </span>
+                    </td>
                     <td>
                       <div className={s.progressBar}>
                         <div className={s.progressFill} style={{ width: `${0}%` }} />
                       </div>
                       <small>{0}%</small>
                     </td>
-                    <td>{job.Ordt ?? '—'}</td>
+                    <td>{job.ordt ?? '—'}</td>
                     <td>
                       <button
                         className={`${s.btn} ${s.btnSecondary}`}
                         style={{ fontSize: '0.75rem', padding: '0.3rem 0.7rem' }}
-                        onClick={() => navigate(`/jobs/estimation-entry/${job.Ordr ?? job.ID}`)}
+                        onClick={() => navigate(`/jobs/estimation-entry/${job.Ordr}`)}
                       >
                         Labour &amp; Parts
                       </button>
