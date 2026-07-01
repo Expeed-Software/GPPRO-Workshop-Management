@@ -1,9 +1,46 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminApi } from '../../api/admin';
+import { downloadCsv } from '../../utils/export';
 import s from './Admin.module.css';
 
 type LogType = 'account-mod' | 'change-log' | 'duplicate-removal' | 'user-action';
+
+const EXPORT_COLUMNS: Record<LogType, { key: string; label: string }[]> = {
+  'account-mod': [
+    { key: 'date', label: 'Date/Time' }, { key: 'user', label: 'User' }, { key: 'account', label: 'Account' },
+    { key: 'action', label: 'Action' }, { key: 'before', label: 'Old Value' }, { key: 'after', label: 'New Value' },
+  ],
+  'change-log': [
+    { key: 'date', label: 'Date/Time' }, { key: 'user', label: 'User' }, { key: 'action', label: 'Action' },
+  ],
+  'duplicate-removal': [
+    { key: 'date', label: 'Date/Time' }, { key: 'user', label: 'User' }, { key: 'entityType', label: 'Entity Type' },
+    { key: 'sourceRecord', label: 'Source' }, { key: 'targetRecord', label: 'Target' }, { key: 'action', label: 'Action' }, { key: 'notes', label: 'Notes' },
+  ],
+  'user-action': [
+    { key: 'date', label: 'Date/Time' }, { key: 'user', label: 'User' }, { key: 'action', label: 'Action' },
+    { key: 'details', label: 'Details' }, { key: 'status', label: 'Status' },
+  ],
+};
+
+function toAuditExportRow(logType: LogType, r: any) {
+  const date = r.LogDate ?? r.createdAt ?? r.date;
+  const user = logType === 'account-mod' ? (r.ChangedBy ?? r.user ?? r.userId ?? '') : (r.UserName ?? r.user ?? r.userId ?? '');
+  return {
+    date, user,
+    account: r.HEAD ?? r.account ?? r.entityId ?? '',
+    action: r.Action ?? r.action ?? '',
+    before: r.OldValue ?? r.before ?? '',
+    after: r.NewValue ?? r.after ?? '',
+    entityType: r.entityType ?? '',
+    sourceRecord: r.sourceRecord ?? '',
+    targetRecord: r.targetRecord ?? '',
+    notes: r.notes ?? '',
+    details: r.Details ?? r.details ?? '',
+    status: r.status ?? '',
+  };
+}
 
 interface Props { logType: LogType; title: string; testidPrefix: string; adminOnly?: boolean; }
 
@@ -40,13 +77,18 @@ export default function AuditLogViewer({ logType, title, testidPrefix, adminOnly
 
   const set = (k: string) => (e: any) => setFilters((p) => ({ ...p, [k]: e.target.value }));
 
+  const handleExport = async () => {
+    const exportRows = await EXPORT_MAP[logType](filters);
+    downloadCsv(`${testidPrefix}.csv`, (exportRows as any[]).map((r) => toAuditExportRow(logType, r)), EXPORT_COLUMNS[logType]);
+  };
+
   return (
     <div data-testid={`${testidPrefix}-page`} className={s.page}>
       <div className={s.header}>
         <h1 className={s.title}>{title}</h1>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <button className={`${s.btn} ${s.btnSecondary}`} data-testid={`${testidPrefix}-print`} onClick={() => window.print()}>Print</button>
-          <button className={`${s.btn} ${s.btnSecondary}`} data-testid={`${testidPrefix}-export`} onClick={() => EXPORT_MAP[logType](filters)}>Export</button>
+          <button className={`${s.btn} ${s.btnSecondary}`} data-testid={`${testidPrefix}-export`} onClick={handleExport}>Export</button>
         </div>
       </div>
       <div className={s.card}>

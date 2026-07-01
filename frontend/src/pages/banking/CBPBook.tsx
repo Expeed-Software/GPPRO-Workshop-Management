@@ -1,7 +1,24 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { bankingApi } from '../../api/banking';
+import { downloadCsv } from '../../utils/export';
 import s from './Banking.module.css';
+
+const CBPBOOK_COLUMNS = [
+  { key: 'date', label: 'Date' },
+  { key: 'account', label: 'Account' },
+  { key: 'type', label: 'Type' },
+  { key: 'reference', label: 'Reference' },
+];
+
+function toCbpExportRow(r: any) {
+  return {
+    date: r.DATE ? new Date(r.DATE).toLocaleDateString() : '',
+    account: r.NARRATION ?? '',
+    type: r.TRANTYPE ?? '',
+    reference: r.REFNO ?? '',
+  };
+}
 
 export default function CBPBook() {
   const [filters, setFilters] = useState({ accountType: '', fromDate: '', toDate: '', tranType: '' });
@@ -27,7 +44,7 @@ export default function CBPBook() {
         <h1 className={s.title}>Cash/Bank Book Report (CBPBook)</h1>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <button className={`${s.btn} ${s.btnSecondary}`} data-testid="cbpbook-print-btn" onClick={() => window.print()}>Print</button>
-          <button className={`${s.btn} ${s.btnSecondary}`} data-testid="cbpbook-export-btn" disabled={isLoading || (rows as any[]).length === 0}>Export</button>
+          <button className={`${s.btn} ${s.btnSecondary}`} data-testid="cbpbook-export-btn" disabled={isLoading || (rows as any[]).length === 0} onClick={() => downloadCsv('cbpbook.csv', (rows as any[]).map(toCbpExportRow), CBPBOOK_COLUMNS)}>Export</button>
         </div>
       </div>
       <div className={s.card}>

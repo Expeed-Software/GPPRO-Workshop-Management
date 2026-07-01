@@ -1,7 +1,28 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { paymentsApi, receiptsApi } from '../../api/transactions';
+import { downloadCsv } from '../../utils/export';
 import s from './Transactions.module.css';
+
+const TRANSACTION_REPORT_COLUMNS = [
+  { key: 'DATE', label: 'Date' },
+  { key: 'NARRATION', label: 'Party' },
+  { key: 'VTYPE', label: 'Method' },
+  { key: 'Amount', label: 'Amount' },
+  { key: 'REFNO', label: 'Ref' },
+  { key: 'Status', label: 'Status' },
+];
+
+function toTransactionExportRow(r: any) {
+  return {
+    DATE: r.DATE,
+    NARRATION: r.NARRATION,
+    VTYPE: r.VTYPE ?? '',
+    Amount: Number(r.DEBT ?? r.CRED ?? 0).toFixed(2),
+    REFNO: r.REFNO ?? '',
+    Status: r.POSTED ? 'Posted' : 'Pending',
+  };
+}
 
 interface Props { type: 'receipts' | 'payments' | 'receipts-backup'; title: string; testidPrefix: string; }
 
@@ -24,7 +45,7 @@ function TransactionReport({ type, title, testidPrefix }: Props) {
         <h1 className={s.title}>{title}</h1>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <button className={`${s.btn} ${s.btnSecondary}`} data-testid={`${testidPrefix}-print-btn`} onClick={() => window.print()}>Print</button>
-          <button className={`${s.btn} ${s.btnSecondary}`} data-testid={`${testidPrefix}-export-pdf`}>Export PDF</button>
+          <button className={`${s.btn} ${s.btnSecondary}`} data-testid={`${testidPrefix}-export-pdf`} onClick={() => downloadCsv(`${testidPrefix}.csv`, (rows as any[]).map(toTransactionExportRow), TRANSACTION_REPORT_COLUMNS)}>Export</button>
         </div>
       </div>
       <div className={s.card}>

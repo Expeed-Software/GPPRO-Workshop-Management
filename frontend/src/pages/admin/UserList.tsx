@@ -6,6 +6,7 @@ import { usersApi, UserRecord } from '../../api/users';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { useAuthStore } from '../../stores/auth';
+import { downloadFileFromApi } from '../../utils/export';
 import styles from './UserList.module.css';
 
 const STATUS_COLORS: Record<string, string> = {
@@ -64,7 +65,7 @@ export const UserList: React.FC = () => {
             <Button
               variant="secondary"
               size="sm"
-              onClick={() => window.open(usersApi.export(), '_blank')}
+              onClick={() => downloadFileFromApi(usersApi.export(), 'users.csv')}
             >
               <Download size={15} /> Export
             </Button>

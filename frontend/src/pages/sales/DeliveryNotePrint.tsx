@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { deliveryApi } from '../../api/sales';
 import { useAuthStore } from '../../store/authStore';
+import { downloadCsv } from '../../utils/export';
 import s from './Sales.module.css';
 
 export default function DeliveryNotePrint() {
@@ -13,7 +14,10 @@ export default function DeliveryNotePrint() {
   const { data: note, isLoading } = useQuery({ queryKey: ['delivery-note-print', noteId], queryFn: () => deliveryApi.print(noteId!) });
   const { data: auditLog } = useQuery({ queryKey: ['delivery-note-audit', noteId], queryFn: () => deliveryApi.audit(noteId!), enabled: isSupervisorOrAdmin });
 
-  const exportMut = useMutation({ mutationFn: () => deliveryApi.export(noteId!), onSuccess: () => {} });
+  const exportMut = useMutation({
+    mutationFn: () => deliveryApi.export(noteId!),
+    onSuccess: (data: any) => downloadCsv(`delivery-note-${noteId}.csv`, [data]),
+  });
 
   if (isLoading) return <div data-testid="deliverynoteprint-loading" className={s.page}><div className={s.skeleton} style={{ height: '200px' }} /></div>;
 

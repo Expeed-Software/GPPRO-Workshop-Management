@@ -2,7 +2,28 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { accountsApi } from '../../api/accounts';
 import { useAuthStore } from '../../store/authStore';
+import { downloadCsv } from '../../utils/export';
 import s from './Accounts.module.css';
+
+const ACCOUNT_HEAD_COLUMNS = [
+  { key: 'code', label: 'Code' },
+  { key: 'name', label: 'Name' },
+  { key: 'parent', label: 'Parent' },
+  { key: 'type', label: 'Type' },
+  { key: 'group', label: 'Group' },
+  { key: 'status', label: 'Status' },
+];
+
+function toAccountHeadExportRow(h: any) {
+  return {
+    code: h.CODES ?? h.code,
+    name: h.HEAD ?? h.name,
+    parent: h.HEADUNDER ?? h.parent ?? '',
+    type: h.CORD ?? h.type,
+    group: h.Group ?? h.group ?? '',
+    status: (h.LOCKED || h.Freeze || h.lock) ? 'Locked' : 'Active',
+  };
+}
 
 export default function AccountHeadList() {
   const { user } = useAuthStore();
@@ -41,7 +62,7 @@ export default function AccountHeadList() {
         <h1 className={s.title}>Account Heads</h1>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <button className={`${s.btn} ${s.btnSecondary}`} data-testid="acheadlist-print-btn" onClick={() => window.print()}>Print</button>
-          <button className={`${s.btn} ${s.btnSecondary}`} data-testid="acheadlist-export-btn">Export</button>
+          <button className={`${s.btn} ${s.btnSecondary}`} data-testid="acheadlist-export-btn" onClick={() => downloadCsv('account-heads.csv', (heads as any[]).map(toAccountHeadExportRow), ACCOUNT_HEAD_COLUMNS)}>Export</button>
           {isSupervisorOrAdmin && <button className={`${s.btn} ${s.btnPrimary}`} onClick={openAdd}>+ Add</button>}
         </div>
       </div>

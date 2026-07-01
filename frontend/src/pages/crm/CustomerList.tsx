@@ -4,7 +4,16 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { customersApi } from '../../api/customers';
 import { Button } from '../../components/ui/Button';
 import { useAuthStore } from '../../stores/auth';
+import { normList } from '../../api/client';
+import { downloadCsv } from '../../utils/export';
 import styles from './CrmList.module.css';
+
+const CUSTOMER_EXPORT_COLUMNS = [
+  { key: 'CustName', label: 'Customer' },
+  { key: 'Phone1', label: 'Phone' },
+  { key: 'email', label: 'Email' },
+  { key: 'Address1', label: 'Address' },
+];
 
 export const CustomerList: React.FC = () => {
   const navigate = useNavigate();
@@ -33,6 +42,12 @@ export const CustomerList: React.FC = () => {
   const toggleSelect = (id: number) => setSelected((s) => s.includes(id) ? s.filter((x) => x !== id) : [...s, id]);
   const selectAll = () => setSelected(customers.map((c) => c.CustId || c.id));
   const clearSelect = () => setSelected([]);
+
+  const handleExport = async () => {
+    const res = await customersApi.export(filters);
+    const { data: exportRows } = normList(res);
+    downloadCsv('customers.csv', exportRows, CUSTOMER_EXPORT_COLUMNS);
+  };
 
   return (
     <div data-testid="customer-management-page" className={styles.page}>
@@ -67,7 +82,7 @@ export const CustomerList: React.FC = () => {
         </select>
         {canWrite && (
           <>
-            <Button variant="ghost" onClick={() => customersApi.export(filters)} data-testid="customer-export-button">Export</Button>
+            <Button variant="ghost" onClick={handleExport} data-testid="customer-export-button">Export</Button>
           </>
         )}
       </div>

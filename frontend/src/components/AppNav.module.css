@@ -16,6 +16,21 @@
 .nav.expanded { width: 220px; }
 .nav.collapsed { width: 52px; }
 
+/* ── Header row (toggle + logo) ── */
+.header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  flex-shrink: 0;
+}
+.nav.collapsed .header {
+  flex-direction: column;
+  justify-content: center;
+  padding: 12px 0 8px;
+  gap: 8px;
+}
+
 /* ── Toggle button ── */
 .toggleBtn {
   display: flex;
@@ -30,7 +45,6 @@
   cursor: pointer;
   flex-shrink: 0;
   transition: background 0.15s;
-  margin: 12px auto 4px;
 }
 .toggleBtn:hover { background: rgba(255,255,255,0.22); }
 .toggleBtn:focus-visible { outline: 2px solid rgba(255,255,255,0.6); outline-offset: 2px; }
@@ -41,8 +55,8 @@
   align-items: center;
   gap: 10px;
   text-decoration: none;
-  padding: 10px 12px 14px;
-  flex-shrink: 0;
+  flex: 1;
+  min-width: 0;
   overflow: hidden;
   white-space: nowrap;
 }
@@ -102,7 +116,7 @@
 }
 .navItem:focus-visible { outline: 2px solid rgba(255,255,255,0.5); outline-offset: -2px; }
 
-.navIcon { flex-shrink: 0; display: flex; align-items: center; }
+.navIcon { flex-shrink: 0; width: 18px; display: flex; align-items: center; justify-content: center; }
 .navLabel { flex: 1; overflow: hidden; text-overflow: ellipsis; }
 .navChevron { flex-shrink: 0; transition: transform 0.18s; margin-left: auto; }
 .navChevron.open { transform: rotate(180deg); }
@@ -249,7 +263,6 @@
 .iconBtn {
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: 9px;
   width: 100%;
   padding: 8px 14px;

@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import GenericReport from './GenericReport';
 import { reportsApi } from '../../api/reports';
 import api from '../../api/axios';
+import { downloadCsv } from '../../utils/export';
 
 
 function BalanceSheetReport() {
@@ -26,7 +27,7 @@ function BalanceSheetReport() {
         <h1 style={{ fontSize: '1.5rem', fontWeight: 700 }}>Balance Sheet</h1>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <button style={{ padding: '0.4rem 0.9rem', background: '#e2e8f0', borderRadius: '0.375rem', border: 'none', cursor: 'pointer' }} onClick={() => window.print()}>Print</button>
-          <button style={{ padding: '0.4rem 0.9rem', background: '#e2e8f0', borderRadius: '0.375rem', border: 'none', cursor: 'pointer' }}>Export</button>
+          <button style={{ padding: '0.4rem 0.9rem', background: '#e2e8f0', borderRadius: '0.375rem', border: 'none', cursor: 'pointer' }} onClick={() => downloadCsv('balance-sheet.csv', bankAccounts, [{ key: 'Account', label: 'Account' }, { key: 'Balance', label: 'Balance' }])}>Export</button>
         </div>
       </div>
 

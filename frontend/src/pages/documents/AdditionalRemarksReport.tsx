@@ -3,7 +3,26 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { remarksApi } from '../../api/documents';
 import { Button } from '../../components/ui/Button';
 import { useAuthStore } from '../../stores/auth';
+import { downloadCsv } from '../../utils/export';
 import styles from '../admin/UserList.module.css';
+
+const REMARKS_EXPORT_COLUMNS = [
+  { key: 'createdAt', label: 'Date/Time' },
+  { key: 'transactionId', label: 'Transaction' },
+  { key: 'remark', label: 'Remark' },
+  { key: 'userName', label: 'User' },
+  { key: 'updatedAt', label: 'Last Edited' },
+];
+
+function toRemarkExportRow(r: any) {
+  return {
+    createdAt: r.createdAt ? new Date(r.createdAt).toLocaleString() : '',
+    transactionId: r.transactionId ?? r.TransactionId ?? '',
+    remark: r.remark ?? r.Remark ?? '',
+    userName: r.userName ?? r.UserId ?? '',
+    updatedAt: r.updatedAt ? new Date(r.updatedAt).toLocaleString() : '',
+  };
+}
 
 export const AdditionalRemarksReport: React.FC = () => {
   const qc = useQueryClient();
@@ -43,7 +62,7 @@ export const AdditionalRemarksReport: React.FC = () => {
           <h1 className={styles.title}>Additional Remarks Report</h1>
           <p className={styles.subtitle}>View and manage transaction remarks and audit history</p>
         </div>
-        {canExport && <Button variant="ghost" data-testid="remarks-report-export-btn" onClick={() => alert('Export not yet wired')}>Export</Button>}
+        {canExport && <Button variant="ghost" data-testid="remarks-report-export-btn" onClick={() => downloadCsv('additional-remarks.csv', remarks.map(toRemarkExportRow), REMARKS_EXPORT_COLUMNS)}>Export</Button>}
       </div>
 
       {error && <div style={{ padding: '10px 14px', background: 'rgba(210,59,65,0.09)', border: '1px solid rgba(210,59,65,0.25)', color: 'var(--color-error)', borderRadius: 8, fontSize: 'var(--text-sm-size)' }} role="alert">{error}</div>}

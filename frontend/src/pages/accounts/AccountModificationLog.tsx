@@ -1,7 +1,28 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { accountsApi } from '../../api/accounts';
+import { downloadCsv } from '../../utils/export';
 import s from './Accounts.module.css';
+
+const ACCOUNT_MOD_LOG_COLUMNS = [
+  { key: 'date', label: 'Date' },
+  { key: 'account', label: 'Account' },
+  { key: 'action', label: 'Action' },
+  { key: 'user', label: 'User' },
+  { key: 'before', label: 'Before' },
+  { key: 'after', label: 'After' },
+];
+
+function toAccountModLogExportRow(r: any) {
+  return {
+    date: r.LogDate,
+    account: r.HEAD,
+    action: r.Action,
+    user: r.ChangedBy,
+    before: r.OldValue ?? '',
+    after: r.NewValue ?? '',
+  };
+}
 
 export default function AccountModificationLog() {
   const [filters, setFilters] = useState({ account: '', action: '', dateFrom: '', dateTo: '', user: '' });
@@ -17,7 +38,7 @@ export default function AccountModificationLog() {
         <h1 className={s.title}>Account Modification Log</h1>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <button className={`${s.btn} ${s.btnSecondary}`} data-testid="accountmodlog-print-btn" onClick={() => window.print()}>Print</button>
-          <button className={`${s.btn} ${s.btnSecondary}`} data-testid="accountmodlog-export-btn">Export</button>
+          <button className={`${s.btn} ${s.btnSecondary}`} data-testid="accountmodlog-export-btn" onClick={() => downloadCsv('account-modification-log.csv', (rows as any[]).map(toAccountModLogExportRow), ACCOUNT_MOD_LOG_COLUMNS)}>Export</button>
         </div>
       </div>
       <div className={s.card}>

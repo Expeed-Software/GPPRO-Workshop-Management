@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { purchaseDOApi, purchaseReportsApi } from '../../api/purchase';
 import { suppliersApi } from '../../api/customers';
+import { downloadCsv } from '../../utils/export';
 import s from '../sales/Sales.module.css';
 
 interface Props {
@@ -33,7 +34,7 @@ export default function PurchaseReport({ title, queryKey, fetchFn, columns, test
         <h1 className={s.title}>{title}</h1>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <button className={`${s.btn} ${s.btnSecondary}`} data-testid={`${testidPrefix}-print`} onClick={() => window.print()}>Print</button>
-          <button className={`${s.btn} ${s.btnSecondary}`} data-testid={`${testidPrefix}-export-menu`} onClick={() => {}}>Export</button>
+          <button className={`${s.btn} ${s.btnSecondary}`} data-testid={`${testidPrefix}-export-menu`} onClick={() => downloadCsv(`${testidPrefix}.csv`, rows, columns)}>Export</button>
         </div>
       </div>
 

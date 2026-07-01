@@ -1,9 +1,28 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { vouchersApi } from '../../api/accounts';
+import { downloadCsv } from '../../utils/export';
 import s from './Accounts.module.css';
 
 interface Props { title?: string; queryKey?: string; fetchFn?: (p: any) => Promise<any>; testidPrefix?: string; }
+
+const VOUCHER_LIST_COLUMNS = [
+  { key: 'voucherNo', label: 'Voucher #' },
+  { key: 'date', label: 'Date' },
+  { key: 'account', label: 'Account' },
+  { key: 'amount', label: 'Amount' },
+  { key: 'status', label: 'Status' },
+];
+
+function toVoucherExportRow(r: any) {
+  return {
+    voucherNo: r.VSRL ?? r.vsrl ?? r.voucherNo,
+    date: r.DATE ?? r.date,
+    account: r.VTYPE ?? r.account,
+    amount: Number(r.DEBT ?? r.amount ?? 0).toFixed(2),
+    status: r.POSTED === 1 ? 'Posted' : (r.status ?? 'Draft'),
+  };
+}
 
 function VoucherListBase({ title = 'Voucher List', queryKey = 'voucher-list', fetchFn = vouchersApi.list, testidPrefix = 'voucher-list' }: Props) {
   const [filters, setFilters] = useState({ dateFrom: '', dateTo: '', account: '', status: '' });
@@ -19,7 +38,7 @@ function VoucherListBase({ title = 'Voucher List', queryKey = 'voucher-list', fe
         <h1 className={s.title}>{title}</h1>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <button className={`${s.btn} ${s.btnSecondary}`} data-testid={`${testidPrefix}-print-btn`} onClick={() => window.print()}>Print</button>
-          <button className={`${s.btn} ${s.btnSecondary}`} data-testid={`${testidPrefix}-export-btn`}>Export</button>
+          <button className={`${s.btn} ${s.btnSecondary}`} data-testid={`${testidPrefix}-export-btn`} onClick={() => downloadCsv(`${testidPrefix}.csv`, (rows as any[]).map(toVoucherExportRow), VOUCHER_LIST_COLUMNS)}>Export</button>
         </div>
       </div>
       <div className={s.card}>

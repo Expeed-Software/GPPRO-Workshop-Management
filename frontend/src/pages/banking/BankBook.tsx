@@ -1,9 +1,30 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { bankingApi } from '../../api/banking';
+import { downloadCsv } from '../../utils/export';
 import s from './Banking.module.css';
 
 interface Props { type?: 'bank' | 'cash'; }
+
+const BANK_BOOK_COLUMNS = [
+  { key: 'date', label: 'Date' },
+  { key: 'reference', label: 'Reference' },
+  { key: 'description', label: 'Description' },
+  { key: 'debit', label: 'Debit' },
+  { key: 'credit', label: 'Credit' },
+  { key: 'balance', label: 'Balance' },
+];
+
+function toBankBookExportRow(r: any) {
+  return {
+    date: r.DATE ?? r.date,
+    reference: r.REFNO ?? r.reference,
+    description: r.NARRATION ?? r.description,
+    debit: r.TRANTYPE === 'Debit' ? (r.AMT ?? r.debit ?? '') : '',
+    credit: r.TRANTYPE === 'Credit' ? (r.AMT ?? r.credit ?? '') : '',
+    balance: r.BALANCE ?? r.balance ?? '',
+  };
+}
 
 export default function BankBook({ type = 'bank' }: Props) {
   const prefix = type === 'cash' ? 'cashbook' : 'bankbook';
@@ -38,7 +59,7 @@ export default function BankBook({ type = 'bank' }: Props) {
         <h1 className={s.title}>{title}</h1>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <button className={`${s.btn} ${s.btnSecondary}`} data-testid={`${prefix}-print-btn`} onClick={() => window.print()}>Print</button>
-          <button className={`${s.btn} ${s.btnSecondary}`} data-testid={`${prefix}-export-btn`} disabled={isLoading || (rows as any[]).length === 0}>Export</button>
+          <button className={`${s.btn} ${s.btnSecondary}`} data-testid={`${prefix}-export-btn`} disabled={isLoading || (rows as any[]).length === 0} onClick={() => downloadCsv(`${prefix}.csv`, (rows as any[]).map(toBankBookExportRow), BANK_BOOK_COLUMNS)}>Export</button>
         </div>
       </div>
       <div className={s.card}>

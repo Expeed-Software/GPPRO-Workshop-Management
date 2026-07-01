@@ -1,7 +1,23 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { accountsApi } from '../../api/accounts';
+import { downloadCsv } from '../../utils/export';
 import s from './Accounts.module.css';
+
+const ACCOUNT_TREE_COLUMNS = [
+  { key: 'code', label: 'Code' },
+  { key: 'name', label: 'Name' },
+  { key: 'type', label: 'Type' },
+  { key: 'path', label: 'Path' },
+];
+
+function flattenTree(nodes: any[], path: string[] = []): any[] {
+  return nodes.flatMap((node) => {
+    const currentPath = [...path, node.HEAD];
+    const row = { code: node.CODES, name: node.HEAD, type: node.CORD, path: currentPath.join(' > ') };
+    return node.children?.length ? [row, ...flattenTree(node.children, currentPath)] : [row];
+  });
+}
 
 function TreeNode({ node, depth = 0 }: { node: any; depth?: number }) {
   const [open, setOpen] = useState(depth < 2);
@@ -29,7 +45,7 @@ export default function AccountTree() {
     <div data-testid="acheadtree-page" className={s.page}>
       <div className={s.header}>
         <h1 className={s.title}>Account Tree</h1>
-        <button className={`${s.btn} ${s.btnSecondary}`} data-testid="acheadtree-export-btn">Export</button>
+        <button className={`${s.btn} ${s.btnSecondary}`} data-testid="acheadtree-export-btn" onClick={() => downloadCsv('account-tree.csv', flattenTree(tree as any[]), ACCOUNT_TREE_COLUMNS)}>Export</button>
       </div>
       <div className={s.card} data-testid="acheadtree-root">
         {isLoading ? <div className={s.skeleton} style={{ height: '200px' }} /> : (tree as any[]).length === 0 ? (

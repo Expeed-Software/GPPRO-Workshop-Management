@@ -1,7 +1,15 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { bankingApi } from '../../api/banking';
+import { downloadCsv } from '../../utils/export';
 import s from './Banking.module.css';
+
+const PENDING_BILLS_COLUMNS = [
+  { key: 'recipientName', label: 'Recipient' },
+  { key: 'billsCount', label: 'Bills Count' },
+  { key: 'totalAmount', label: 'Total Amount' },
+  { key: 'ageBucket', label: 'Age Bucket' },
+];
 
 export default function PendingBillsLetter() {
   const [filters, setFilters] = useState({ recipientType: '', ageBucket: '', asOfDate: '' });
@@ -57,7 +65,7 @@ export default function PendingBillsLetter() {
                     <td style={{ display: 'flex', gap: '0.4rem' }}>
                       <button className={`${s.btn} ${s.btnSecondary}`} style={{ fontSize: '0.75rem' }} data-testid={`pendingbills-preview-btn-${r.recipientId}`}>Preview</button>
                       <button className={`${s.btn} ${s.btnSecondary}`} style={{ fontSize: '0.75rem' }} data-testid={`pendingbills-print-btn-${r.recipientId}`} onClick={() => window.print()}>Print</button>
-                      <button className={`${s.btn} ${s.btnSecondary}`} style={{ fontSize: '0.75rem' }} data-testid={`pendingbills-export-btn-${r.recipientId}`}>Export</button>
+                      <button className={`${s.btn} ${s.btnSecondary}`} style={{ fontSize: '0.75rem' }} data-testid={`pendingbills-export-btn-${r.recipientId}`} onClick={() => downloadCsv(`pending-bills-${r.recipientId}.csv`, [r], PENDING_BILLS_COLUMNS)}>Export</button>
                     </td>
                   </tr>
                 ))}

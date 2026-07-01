@@ -1,7 +1,16 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { stockApi } from '../../api/inventory';
+import { downloadCsv } from '../../utils/export';
 import s from './Inventory.module.css';
+
+const STOCK_STATEMENT_COLUMNS = [
+  { key: 'Date', label: 'Date' },
+  { key: 'Itemcode', label: 'Item Code' },
+  { key: 'ItemDescription', label: 'Description' },
+  { key: 'StkIN', label: 'In Qty' },
+  { key: 'StkOut', label: 'Out Qty' },
+];
 
 interface Props {
   title: string;
@@ -24,7 +33,7 @@ function StockStatement({ title, queryKey, fetchFn, testidPrefix }: Props) {
         <h1 className={s.title}>{title}</h1>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <button className={`${s.btn} ${s.btnSecondary}`} onClick={() => window.print()}>Print</button>
-          <button className={`${s.btn} ${s.btnSecondary}`} data-testid={`${testidPrefix}-export`}>Export</button>
+          <button className={`${s.btn} ${s.btnSecondary}`} data-testid={`${testidPrefix}-export`} onClick={() => downloadCsv(`${testidPrefix}.csv`, rows as any[], STOCK_STATEMENT_COLUMNS)}>Export</button>
         </div>
       </div>
       <div className={s.card}>

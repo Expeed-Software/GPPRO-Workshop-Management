@@ -228,17 +228,19 @@ export const AppNav: React.FC = () => {
       aria-label="Main navigation"
       ref={navRef}
     >
-      <button
-        className={styles.toggleBtn}
-        onClick={toggleCollapsed}
-        aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-      >
-        <Menu size={16} />
-      </button>
+      <div className={styles.header}>
+        <button
+          className={styles.toggleBtn}
+          onClick={toggleCollapsed}
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        >
+          <Menu size={16} />
+        </button>
 
-      <Link to="/dashboard" className={styles.logo}>
-        <Logo size={28} showText={!collapsed} textColor="#fff" />
-      </Link>
+        <Link to="/dashboard" className={styles.logo}>
+          <Logo size={28} showText={!collapsed} textColor="#fff" />
+        </Link>
+      </div>
 
       <div className={styles.navLinks}>
         {visibleItems.map((item) => {
@@ -321,7 +323,7 @@ export const AppNav: React.FC = () => {
 
       <div className={styles.sidebarFooter}>
         <button className={styles.iconBtn} aria-label="Notifications">
-          <Bell size={17} />
+          <span className={styles.navIcon}><Bell size={17} /></span>
           {!collapsed && <span className={styles.iconBtnLabel}>Notifications</span>}
         </button>
 

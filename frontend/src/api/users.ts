@@ -76,7 +76,7 @@ export const usersApi = {
 
   bulkImport: (rows: any[]) => api.post('/users/import', { rows }),
 
-  export: (format = 'csv') => `/api/v1/users/export?format=${format}`,
+  export: (format = 'csv') => `/users/export?format=${format}`,
 
   getRights: (params?: { role?: string }) => api.get('/users/rights', { params }),
 

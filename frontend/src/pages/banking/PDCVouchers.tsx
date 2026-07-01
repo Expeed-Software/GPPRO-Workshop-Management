@@ -1,9 +1,28 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { bankingApi } from '../../api/banking';
+import { downloadCsv } from '../../utils/export';
 import s from './Banking.module.css';
 
 interface Props { type?: 'issue' | 'receipt'; }
+
+const PDC_VOUCHER_COLUMNS = [
+  { key: 'voucherRef', label: 'Voucher Ref' },
+  { key: 'date', label: 'Date' },
+  { key: 'account', label: 'Account' },
+  { key: 'amount', label: 'Amount' },
+  { key: 'status', label: 'Status' },
+];
+
+function toPdcExportRow(r: any) {
+  return {
+    voucherRef: r.ID ?? r.vsrl ?? r.voucherRef,
+    date: r.Date ?? r.date,
+    account: r.Ac ?? r.account,
+    amount: Number(r.NetAmt ?? r.amount ?? 0).toFixed(2),
+    status: r.Remark ?? r.Status ?? r.status ?? '',
+  };
+}
 
 export default function PDCVouchers({ type = 'issue' }: Props) {
   const qc = useQueryClient();
@@ -29,7 +48,7 @@ export default function PDCVouchers({ type = 'issue' }: Props) {
         <h1 className={s.title}>{title}</h1>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <button className={`${s.btn} ${s.btnSecondary}`} data-testid={`${prefix}-print-btn`} onClick={() => window.print()}>Print</button>
-          <button className={`${s.btn} ${s.btnSecondary}`} data-testid={`${prefix}-export-btn`}>Export</button>
+          <button className={`${s.btn} ${s.btnSecondary}`} data-testid={`${prefix}-export-btn`} onClick={() => downloadCsv(`${prefix}.csv`, (rows as any[]).map(toPdcExportRow), PDC_VOUCHER_COLUMNS)}>Export</button>
         </div>
       </div>
       <div className={s.card}>

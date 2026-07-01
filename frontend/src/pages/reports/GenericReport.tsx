@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { downloadCsv } from '../../utils/export';
 import s from './Reports.module.css';
 
 export interface Col { key: string; label: string; format?: 'currency' | 'date'; }
@@ -33,7 +34,7 @@ export default function GenericReport({ title, queryKey, fetchFn, testidPrefix, 
         <h1 className={s.title}>{title}</h1>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <button className={`${s.btn} ${s.btnSecondary}`} data-testid={`${testidPrefix}-print-btn`} onClick={() => window.print()}>Print</button>
-          <button className={`${s.btn} ${s.btnSecondary}`} data-testid={`${testidPrefix}-export-btn`}>Export</button>
+          <button className={`${s.btn} ${s.btnSecondary}`} data-testid={`${testidPrefix}-export-btn`} onClick={() => downloadCsv(`${testidPrefix}.csv`, rows as any[], columns)}>Export</button>
         </div>
       </div>
       <div className={s.card}>
