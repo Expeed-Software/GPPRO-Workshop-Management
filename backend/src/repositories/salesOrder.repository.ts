@@ -16,27 +16,25 @@ async function querySalesOrders(filter: Record<string, any>) {
   req.input('limit', sql.Int, limit);
   req.input('offset', sql.Int, offset);
 
-  let where = '(o.Ordr LIKE @search OR c.custname LIKE @search OR o.CustId LIKE @search)';
-  if (filter.status === 'open') where += ' AND o.CLOSED = 0';
-  else if (filter.status === 'closed') where += ' AND o.CLOSED = 1';
-  if (filter.fromDate) { req.input('fromDate', sql.DateTime, new Date(filter.fromDate)); where += ' AND o.Ordt >= @fromDate'; }
-  if (filter.toDate) { req.input('toDate', sql.DateTime, new Date(filter.toDate)); where += ' AND o.Ordt <= @toDate'; }
-  if (filter.custId) { req.input('custId', sql.NVarChar, filter.custId); where += ' AND o.CustId = @custId'; }
+  let where = '(Ordr LIKE @search OR custname LIKE @search OR CustId LIKE @search)';
+  if (filter.status === 'open') where += ' AND CLOSED = 0';
+  else if (filter.status === 'closed') where += ' AND CLOSED = 1';
+  if (filter.fromDate) { req.input('fromDate', sql.DateTime, new Date(filter.fromDate)); where += ' AND Ordt >= @fromDate'; }
+  if (filter.toDate) { req.input('toDate', sql.DateTime, new Date(filter.toDate)); where += ' AND Ordt <= @toDate'; }
+  if (filter.custId) { req.input('custId', sql.NVarChar, filter.custId); where += ' AND CustId = @custId'; }
 
   const result = await req.query(
     'SELECT * FROM (' +
-    '  SELECT ROW_NUMBER() OVER (ORDER BY o.Ordt DESC, o.ID DESC) AS rn,' +
-    '         o.ID, o.Ccode, o.yr, o.Ordr, o.Ordt, o.CustId, o.Lpo, o.LpoDt,' +
-    '         o.Total, o.Txa, o.ServiceCharge, o.Tda, o.Nett, o.[User],' +
-    '         o.VehId, o.km, o.CustNote, o.TechNote, o.CLOSED, o.staffid,' +
-    '         o.Otype, o.InsurID, o.ClaimNumber, o.ExcessAmt, o.Estimation,' +
-    '         o.CompletionDate, o.delivered, o.DeliveryDt, o.StatusId,' +
-    '         o.CreatedBy, o.CretedDt, o.EditedBy, o.EditedDt,' +
-    '         c.custname AS CustomerName, c.Phone1 AS CustomerPhone,' +
-    '         s.Description AS StatusDescription, s.ForeColour, s.BackColour' +
-    '  FROM SalesOrdr01 o' +
-    '  LEFT JOIN Customer c ON c.CustId = o.CustId' +
-    '  LEFT JOIN salesOrdrStatusHead s ON s.StatusID = o.StatusId' +
+    '  SELECT ROW_NUMBER() OVER (ORDER BY Ordt DESC, ID DESC) AS rn,' +
+    '         ID, Ccode, yr, Ordr, Ordt, CustId, Lpo, LpoDt,' +
+    '         Total, Txa, ServiceCharge, Tda, Nett, [User],' +
+    '         VehId, km, CustNote, TechNote, CLOSED, staffid,' +
+    '         Otype, InsurID, ClaimNumber, ExcessAmt, Estimation,' +
+    '         CompletionDate, delivered, DeliveryDt, StatusId,' +
+    '         CreatedBy, CretedDt, EditedBy, EditedDt,' +
+    '         custname AS CustomerName, Phone1 AS CustomerPhone,' +
+    '         JobStatus AS StatusDescription, ForeColour, BackColour' +
+    '  FROM SalesOrdr01Sql' +
     '  WHERE ' + where +
     ') t WHERE rn > @offset AND rn <= (@offset + @limit)'
   );
@@ -44,12 +42,12 @@ async function querySalesOrders(filter: Record<string, any>) {
   const countReq = pool.request();
   countReq.input('search', sql.NVarChar, '%' + search + '%');
   if (filter.custId) countReq.input('custId', sql.NVarChar, filter.custId);
-  let countWhere = '(o.Ordr LIKE @search OR c.custname LIKE @search OR o.CustId LIKE @search)';
-  if (filter.status === 'open') countWhere += ' AND o.CLOSED = 0';
-  else if (filter.status === 'closed') countWhere += ' AND o.CLOSED = 1';
-  if (filter.custId) countWhere += ' AND o.CustId = @custId';
+  let countWhere = '(Ordr LIKE @search OR custname LIKE @search OR CustId LIKE @search)';
+  if (filter.status === 'open') countWhere += ' AND CLOSED = 0';
+  else if (filter.status === 'closed') countWhere += ' AND CLOSED = 1';
+  if (filter.custId) countWhere += ' AND CustId = @custId';
   const countResult = await countReq.query(
-    'SELECT COUNT(*) AS total FROM SalesOrdr01 o LEFT JOIN Customer c ON c.CustId = o.CustId WHERE ' + countWhere
+    'SELECT COUNT(*) AS total FROM SalesOrdr01Sql WHERE ' + countWhere
   );
 
   return { recordset: result.recordset, total: countResult.recordset[0]?.total || 0, page, limit };
@@ -62,18 +60,16 @@ export async function getSalesOrderById(id: string) {
   const req = pool.request();
   req.input('ordr', sql.NVarChar, id);
   const result = await req.query(
-    'SELECT o.ID, o.Ccode, o.yr, o.Ordr, o.Ordt, o.CustId, o.Lpo, o.LpoDt,' +
-    '       o.Total, o.Txa, o.ServiceCharge, o.Tda, o.Nett, o.User,' +
-    '       o.VehId, o.km, o.CustNote, o.TechNote, o.CLOSED, o.staffid,' +
-    '       o.Otype, o.InsurID, o.ClaimNumber, o.ExcessAmt, o.Estimation,' +
-    '       o.CompletionDate, o.delivered, o.DeliveryDt, o.StatusId,' +
-    '       o.CreatedBy, o.CretedDt, o.EditedBy, o.EditedDt,' +
-    '       c.custname AS CustomerName, c.Phone1 AS CustomerPhone,' +
-    '       s.Description AS StatusDescription' +
-    ' FROM SalesOrdr01 o' +
-    ' LEFT JOIN Customer c ON c.CustId = o.CustId' +
-    ' LEFT JOIN salesOrdrStatusHead s ON s.StatusID = o.StatusId' +
-    ' WHERE o.Ordr = @ordr OR CAST(o.ID AS nvarchar) = @ordr'
+    'SELECT ID, Ccode, yr, Ordr, Ordt, CustId, Lpo, LpoDt,' +
+    '       Total, Txa, ServiceCharge, Tda, Nett, [User],' +
+    '       VehId, km, CustNote, TechNote, CLOSED, staffid,' +
+    '       Otype, InsurID, ClaimNumber, ExcessAmt, Estimation,' +
+    '       CompletionDate, delivered, DeliveryDt, StatusId,' +
+    '       CreatedBy, CretedDt, EditedBy, EditedDt,' +
+    '       custname AS CustomerName, Phone1 AS CustomerPhone,' +
+    '       JobStatus AS StatusDescription' +
+    ' FROM SalesOrdr01Sql' +
+    ' WHERE Ordr = @ordr OR CAST(ID AS nvarchar) = @ordr'
   );
   return { recordset: result.recordset };
 }
