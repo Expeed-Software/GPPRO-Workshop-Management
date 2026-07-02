@@ -32,7 +32,7 @@ export async function getCustomerOverview(params: {
     '  SELECT ROW_NUMBER() OVER (ORDER BY custname) AS rn,' +
     '         CustId, custname AS CustName, Phone1, Phone2, Fax, email,' +
     '         Address1, Emirate, ContactPerson, ContactTel, area AS Area, Active, Remarks, ccode' +
-    '  FROM Customer' +
+    '  FROM CustomerSql' +
     "  WHERE (custname LIKE @search OR Phone1 LIKE @search OR email LIKE @search)" +
     '  ' + activeClause +
     ') t WHERE rn > @offset AND rn <= (@offset + @limit)'
@@ -42,7 +42,7 @@ export async function getCustomerOverview(params: {
   countReq.input('search', sql.NVarChar, '%' + search + '%');
   if (activeOnly !== null) countReq.input('active', sql.Int, activeOnly);
   const countResult = await countReq.query(
-    'SELECT COUNT(*) AS total FROM Customer' +
+    'SELECT COUNT(*) AS total FROM CustomerSql' +
     " WHERE (custname LIKE @search OR Phone1 LIKE @search OR email LIKE @search)" +
     ' ' + activeClause
   );
@@ -68,7 +68,7 @@ export async function getCustomerById(id: string | number) {
     '       Address1, Address2, Address3, Emirate, ContactPerson, ContactTel,' +
     '       area AS Area, Active, Remarks, ccode, Sman, Grade, LimitApproved,' +
     '       AcStarted, AcClosed' +
-    ' FROM Customer WHERE CustId = @id'
+    ' FROM CustomerSql WHERE CustId = @id'
   );
   return { recordset: result.recordset };
 }
@@ -107,7 +107,7 @@ export async function checkDuplicateCustomer(name: string, phone: string) {
   req.input('name', sql.NVarChar, name);
   req.input('phone', sql.NVarChar, phone);
   const result = await req.query(
-    'SELECT CustId, custname AS CustName, Phone1 FROM Customer WHERE custname = @name OR Phone1 = @phone'
+    'SELECT CustId, custname AS CustName, Phone1 FROM CustomerSql WHERE custname = @name OR Phone1 = @phone'
   );
   return { recordset: result.recordset };
 }
